@@ -1,28 +1,50 @@
 type Move = (Int, Int)
 
-data XO = X | O | Empty deriving(Show)
 
-class Board board where
+class XOable xoable where
+    toXO :: xoable -> XO
+    setXO :: xoable -> XO -> xoable
+
+    --look should have b be restricted to XOable
+class (XOable board) => Board board where
     look :: (Integral a) => board -> a -> Maybe XO  
     draw :: (Integral a) => board -> XO -> a -> board
 
-data SubBoard = SubBoard {cells :: (XO, XO, XO, XO, XO, XO, XO, XO, XO), isPlayble :: Bool, wonBy :: XO} deriving(Show)
+data XO = X | O | Empty deriving Show
+
+instance XOable XO where
+    toXO xo = xo
+    setXO _ xo = xo
+
+data SubBoard = SubBoard {cells :: (XO, XO, XO, XO, XO, XO, XO, XO, XO), isPlayble :: Bool, wonBy :: XO} deriving Show
+
+instance XOable SubBoard where
+    toXO = wonBy
+    setXO (SubBoard cs p _) xo = SubBoard cs p xo
 
 instance Board SubBoard where
-    look (SubBoard c _ _) = getCell c
-    draw (SubBoard c p w) xo i = SubBoard (setCell c xo i) p w
+    look (SubBoard cs _ _) i = getCell cs i
+    draw (SubBoard cs p w) xo i = SubBoard (setCell cs xo i) p w
 
-data GameState = MetaBoard {subBoards :: (SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard), turn :: XO} | InvalidMoves deriving(Show)
+data GameState = MetaBoard {subBoards :: (SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard), turn :: XO, gameWonBy :: XO} | InvalidMoves deriving Show
+
+instance XOable GameState where
+    toXO = gameWonBy
+    setXO (MetaBoard sbs t _) xo = MetaBoard sbs t xo 
 
 instance Board GameState where
     look InvalidMoves _ = Nothing
-    look (MetaBoard sbs t) i = fmap wonBy $ getCell sbs i
+    look (MetaBoard sbs _ _) i = fmap toXO (getCell sbs i)
     draw InvalidMoves _ _= InvalidMoves
-    draw (MetaBoard sbs t) xo i = case getCell sbs i of Nothing -> InvalidMoves 
-                                                        Just sb -> MetaBoard (setCell sbs (newWiner sb xo) i) t
-        where newWiner (SubBoard c p _) xo = SubBoard c p xo
+    draw (MetaBoard sbs t w) xo i = case getCell sbs i of Nothing -> InvalidMoves 
+                                                          Just sb -> MetaBoard (setCell sbs (setXO sb xo) i) t w
+emptySubBoard :: SubBoard
+emptySubBoard = SubBoard (Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty) False Empty
 
-getCell :: (Integral b) => (a, a, a, a, a, a, a, a, a) -> b ->  Maybe a
+emptyMetaBoard :: GameState
+emptyMetaBoard = MetaBoard (emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard) X Empty
+
+getCell :: (Integral a, XOable b) => (b, b, b, b, b, b, b, b, b) -> a ->  Maybe b
 getCell (topLeft, _, _, _, _, _, _, _, _)  0 = Just topLeft
 getCell (_, topMid, _, _, _, _, _, _, _)   1 = Just topMid
 getCell (_, _, topRight, _, _, _, _, _, _) 2 = Just topRight 
@@ -34,7 +56,7 @@ getCell (_, _, _, _, _, _, _, botMid, _)   7 = Just botMid
 getCell (_, _, _, _, _, _, _, _, botRight) 8 = Just botRight
 getCell _ _ = Nothing
 
-setCell :: (Integral b) => (a, a, a, a, a, a, a, a, a) -> a -> b -> (a, a, a, a, a, a, a, a, a)
+setCell :: (Integral a, XOable b) => (b, b, b, b, b, b, b, b, b) -> b -> a -> (b, b, b, b, b, b, b, b, b)
 setCell (_, b, c, d, e, f, g, h, i) topLeft  0 = (topLeft, b, c, d, e, f, g, h, i)
 setCell (a, _, c, d, e, f, g, h, i) topMid   1 = (a, topMid,  c, d, e, f, g, h, i)
 setCell (a, b, _, d, e, f, g, h, i) topRight 2 = (a, b, topRight, d, e, f, g, h, i)
