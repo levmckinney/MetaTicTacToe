@@ -8,7 +8,7 @@ class (XOable board) => Board board where
     look :: (Integral a) => board -> a -> Maybe XO  
     draw :: (Integral a) => board -> XO -> a -> board
 
-data XO = X | O | Empty
+data XO = X | O | Empty deriving Eq
 
 instance XOable XO where
     toXO xo = xo
@@ -112,3 +112,25 @@ setCell (a, b, c, d, e, f, _, h, i) botLeft  6 = (a, b, c, d, e, f, botLeft, h, 
 setCell (a, b, c, d, e, f, g, _, i) botMid   7 = (a, b, c, d, e, f, g, botMid, i)
 setCell (a, b, c, d, e, f, g, h, _) botRight 8 = (a, b, c, d, e, f, g, h, botRight)
 setCell x _ _ = x
+
+winner :: Board a => a -> XO
+winner board 
+    | eq3NE (lb 0) (lb 1) (lb 2) = lb 0
+    | eq3NE (lb 3) (lb 4) (lb 5) = lb 3
+    | eq3NE (lb 6) (lb 7) (lb 8) = lb 6
+    | eq3NE (lb 0) (lb 3) (lb 6) = lb 3
+    | eq3NE (lb 1) (lb 4) (lb 7) = lb 1
+    | eq3NE (lb 2) (lb 5) (lb 8) = lb 2
+    | eq3NE (lb 0) (lb 4) (lb 8) = lb 0
+    | eq3NE (lb 6) (lb 4) (lb 2) = lb 6
+    | otherwise = Empty
+    where lb i = case look board i of Nothing -> Empty
+                                      Just a -> a 
+          eq3NE a b c = (a == b) && (b == c) && (a /= Empty)
+
+evalWinner :: Board a => a -> a
+evalWinner board = setXO board $ winner board
+
+metaWinner :: MetaBoard -> MetaBoard
+metaWinner mb@(MetaBoard (a,b,c,d,e,f,g,h,i) t w) = evalWinner (MetaBoard (ev a, ev b, ev c, ev d, ev e, ev f, ev g, ev h, ev i) t w)
+    where ev = evalWinner
