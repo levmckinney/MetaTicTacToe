@@ -1,22 +1,25 @@
 type Move = (Int, Int)
 
-
 class XOable xoable where
     toXO :: xoable -> XO
     setXO :: xoable -> XO -> xoable
 
-    --look should have b be restricted to XOable
 class (XOable board) => Board board where
     look :: (Integral a) => board -> a -> Maybe XO  
     draw :: (Integral a) => board -> XO -> a -> board
 
-data XO = X | O | Empty deriving Show
+data XO = X | O | Empty
 
 instance XOable XO where
     toXO xo = xo
     setXO _ xo = xo
+    
+instance Show XO where
+    show X = "X"
+    show O = "O"
+    show Empty = " "
 
-data SubBoard = SubBoard {cells :: (XO, XO, XO, XO, XO, XO, XO, XO, XO), isPlayble :: Bool, wonBy :: XO} deriving Show
+data SubBoard = SubBoard {cells :: (XO, XO, XO, XO, XO, XO, XO, XO, XO), isPlayble :: Bool, wonBy :: XO}
 
 instance XOable SubBoard where
     toXO = wonBy
@@ -26,23 +29,65 @@ instance Board SubBoard where
     look (SubBoard cs _ _) i = getCell cs i
     draw (SubBoard cs p w) xo i = SubBoard (setCell cs xo i) p w
 
-data GameState = MetaBoard {subBoards :: (SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard), turn :: XO, gameWonBy :: XO} | InvalidMoves deriving Show
+showSubBoardRow :: (Integral a) => SubBoard -> a -> String
+showSubBoardRow sb i = case (sb, i) of ((SubBoard _ _ X), 0) -> "\\   /"
+                                       ((SubBoard _ _ X), 1) -> " \\ / "
+                                       ((SubBoard _ _ X), 2) -> "  X  "
+                                       ((SubBoard _ _ X), 3) -> " / \\ "
+                                       ((SubBoard _ _ X), 4) -> "/   \\"
+                                       ((SubBoard _ _ O), 0) -> " --- "
+                                       ((SubBoard _ _ O), 1) -> "/   \\"
+                                       ((SubBoard _ _ O), 2) -> "|   |"
+                                       ((SubBoard _ _ O), 3) -> "\\   /"
+                                       ((SubBoard _ _ O), 4) -> " --- "
+                                       (sb, 0)               -> xoRow sb 0
+                                       (_, 1)                -> line
+                                       (sb, 2)               -> xoRow sb 1
+                                       (_, 3)                -> line
+                                       (sb, 4)               -> xoRow sb 2
+    where xoRow sb r = (showLook sb (r*3 + 0)) ++ "|" ++ (showLook sb (r*3 + 1)) ++ "|" ++ (showLook sb (r*3 + 2))
+          line = makeLine 5
 
-instance XOable GameState where
+instance Show SubBoard where
+    show sb = (row 0) ++ "\n" ++ (row 1) ++ "\n" ++ (row 2) ++ "\n" ++ (row 3) ++ "\n" ++ (row 4) ++ "\n"
+        where row = showSubBoardRow sb
+
+
+data MetaBoard = MetaBoard {subBoards :: (SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard), turn :: XO, gameWonBy :: XO}
+
+instance XOable MetaBoard where
     toXO = gameWonBy
     setXO (MetaBoard sbs t _) xo = MetaBoard sbs t xo 
 
-instance Board GameState where
-    look InvalidMoves _ = Nothing
+instance Board MetaBoard where
     look (MetaBoard sbs _ _) i = fmap toXO (getCell sbs i)
-    draw InvalidMoves _ _= InvalidMoves
-    draw (MetaBoard sbs t w) xo i = case getCell sbs i of Nothing -> InvalidMoves 
-                                                          Just sb -> MetaBoard (setCell sbs (setXO sb xo) i) t w
+    draw original@(MetaBoard sbs t w) xo i = case getCell sbs i of Nothing -> original 
+                                                                   Just sb -> MetaBoard (setCell sbs (setXO sb xo) i) t w
+
+instance Show MetaBoard where
+    show mb = metaRow mb 0 ++ line ++ metaRow mb 1 ++ line ++ metaRow mb 2
+        where line = makeLine 17 ++ "\n"
+              metaRow mb mr = (row mb mr 0) ++ "\n" ++ (row mb mr 1) ++ "\n" ++ (row mb mr 2) ++ "\n" ++ (row mb mr 3) ++ "\n" ++ (row mb mr 4) ++ "\n"
+                where row mb mr r = (sbRow (gsb mb mr 0) r) ++ "|" ++ (sbRow (gsb mb mr 1) r) ++ "|" ++ (sbRow (gsb mb mr 2) r) 
+                        where sbRow = showSubBoardRow
+                              gsb mb mr b = case getSubBoard mb (mr*3 + b) of Just sb -> sb
+                                                                              Nothing -> emptySubBoard
+         
+
+getSubBoard :: (Integral a) => MetaBoard -> a -> Maybe SubBoard
+getSubBoard (MetaBoard c _ _) i = getCell c i
+
 emptySubBoard :: SubBoard
 emptySubBoard = SubBoard (Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty) False Empty
 
-emptyMetaBoard :: GameState
+emptyMetaBoard :: MetaBoard
 emptyMetaBoard = MetaBoard (emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard) X Empty
+
+showLook :: (Integral a, Board b) => b -> a -> String
+showLook board i = case look board i of Nothing -> "Out of Range"
+                                        Just xo -> show xo
+makeLine :: Int -> String
+makeLine i = take i (repeat '=')
 
 getCell :: (Integral a, XOable b) => (b, b, b, b, b, b, b, b, b) -> a ->  Maybe b
 getCell (topLeft, _, _, _, _, _, _, _, _)  0 = Just topLeft
