@@ -1,3 +1,14 @@
+module MetaTicTacToe
+(  XO
+,  MetaBoard
+,  SubBoard
+,  getSubBoard
+,  look
+,  makeMoves
+) where
+
+type Cells b = (b, b, b, b, b, b, b, b, b)
+
 type Move = (Int, Int)
 
 data InvalideMove = OutOfRange | AllReadyOccupied | NotPlayble deriving Show
@@ -24,7 +35,7 @@ instance Show XO where
     show O = "O"
     show Empty = " "
 
-data SubBoard = SubBoard {cells :: (XO, XO, XO, XO, XO, XO, XO, XO, XO), isPlayble :: Bool, wonBy :: XO}
+data SubBoard = SubBoard {cells :: Cells XO, isPlayble :: Bool, wonBy :: XO}
 
 instance XOable SubBoard where
     toXO = wonBy
@@ -61,7 +72,7 @@ instance Show SubBoard where
         where row = showSubBoardRow sb
 
 
-data MetaBoard = MetaBoard {subBoards :: (SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard, SubBoard), turn :: XO, gameWonBy :: XO}
+data MetaBoard = MetaBoard {subBoards :: Cells SubBoard, turn :: XO, gameWonBy :: XO}
 
 instance XOable MetaBoard where
     toXO = gameWonBy
@@ -113,10 +124,10 @@ showLook board i = case look board i of Nothing -> "Out of Range"
 makeLine :: Int -> String
 makeLine i = take i (repeat '=')
 
-cellsMap :: (t, t, t, t, t, t, t, t, t) -> (t -> t1) -> (t1, t1, t1, t1, t1, t1, t1, t1, t1)
+cellsMap :: Cells a -> (a -> b) -> Cells b
 cellsMap (a, b, c, d, e, f, g, h, i) fn = (fn a, fn b, fn c, fn d, fn e, fn f, fn g, fn h, fn i)
 
-getCell :: (Integral a, XOable b) => (b, b, b, b, b, b, b, b, b) -> a ->  Maybe b
+getCell :: (Integral a, XOable b) => Cells b -> a ->  Maybe b
 getCell (topLeft, _, _, _, _, _, _, _, _)  0 = Just topLeft
 getCell (_, topMid, _, _, _, _, _, _, _)   1 = Just topMid
 getCell (_, _, topRight, _, _, _, _, _, _) 2 = Just topRight 
@@ -128,7 +139,7 @@ getCell (_, _, _, _, _, _, _, botMid, _)   7 = Just botMid
 getCell (_, _, _, _, _, _, _, _, botRight) 8 = Just botRight
 getCell _ _ = Nothing
 
-setCell :: (Integral a, XOable b) => (b, b, b, b, b, b, b, b, b) -> b -> a -> (b, b, b, b, b, b, b, b, b)
+setCell :: (Integral a, XOable b) => Cells b -> b -> a -> Cells b
 setCell (_, b, c, d, e, f, g, h, i) topLeft  0 = (topLeft, b, c, d, e, f, g, h, i)
 setCell (a, _, c, d, e, f, g, h, i) topMid   1 = (a, topMid,  c, d, e, f, g, h, i)
 setCell (a, b, _, d, e, f, g, h, i) topRight 2 = (a, b, topRight, d, e, f, g, h, i)
