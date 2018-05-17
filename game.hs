@@ -1,5 +1,7 @@
 type Move = (Int, Int)
 
+data InvalideMove = OutOfRange | AllReadyOccupied | NotPlayble deriving Show
+
 class XOable xoable where
     toXO :: xoable -> XO
     setXO :: xoable -> XO -> xoable
@@ -7,6 +9,9 @@ class XOable xoable where
 class (XOable board) => Board board where
     look :: (Integral a) => board -> a -> Maybe XO  
     draw :: (Integral a) => board -> XO -> a -> board
+look' :: (Integral a, Board b) => b -> a -> XO 
+look' b i = case look b i of Nothing -> error "out of range"
+                             Just a -> a
 
 data XO = X | O | Empty deriving Eq
 
@@ -40,13 +45,16 @@ showSubBoardRow sb i = case (sb, i) of ((SubBoard _ _ X), 0) -> "\\   /"
                                        ((SubBoard _ _ O), 2) -> "|   |"
                                        ((SubBoard _ _ O), 3) -> "\\   /"
                                        ((SubBoard _ _ O), 4) -> " --- "
-                                       (sb, 0)               -> xoRow sb 0
+                                       (sb, 0)               -> xoRow 0
                                        (_, 1)                -> line
-                                       (sb, 2)               -> xoRow sb 1
+                                       (sb, 2)               -> xoRow 1
                                        (_, 3)                -> line
-                                       (sb, 4)               -> xoRow sb 2
-    where xoRow sb r = (showLook sb (r*3 + 0)) ++ "|" ++ (showLook sb (r*3 + 1)) ++ "|" ++ (showLook sb (r*3 + 2))
-          line = makeLine 5
+                                       (sb, 4)               -> xoRow 2
+    where xoRow r = (showLook sb (r*3 + 0)) ++ "|" ++ (showLook sb (r*3 + 1)) ++ "|" ++ (showLook sb (r*3 + 2))
+          line = if isPlayble sb then take 5 (repeat '-') else makeLine 5
+
+setPlayble :: SubBoard -> Bool -> SubBoard
+setPlayble (SubBoard c _ w) b = SubBoard c b w 
 
 instance Show SubBoard where
     show sb = (row 0) ++ "\n" ++ (row 1) ++ "\n" ++ (row 2) ++ "\n" ++ (row 3) ++ "\n" ++ (row 4) ++ "\n"
@@ -65,20 +73,36 @@ instance Board MetaBoard where
                                                                    Just sb -> MetaBoard (setCell sbs (setXO sb xo) i) t w
 
 instance Show MetaBoard where
-    show mb = metaRow mb 0 ++ line ++ metaRow mb 1 ++ line ++ metaRow mb 2
+    show mb
+        | gameWonBy mb == X = "X Wins!!!"
+        | gameWonBy mb == O = "O Wins!!!" 
+        | gameWonBy mb == Empty = metaRow 0 ++ line ++ metaRow 1 ++ line ++ metaRow 2
         where line = makeLine 17 ++ "\n"
-              metaRow mb mr = (row mb mr 0) ++ "\n" ++ (row mb mr 1) ++ "\n" ++ (row mb mr 2) ++ "\n" ++ (row mb mr 3) ++ "\n" ++ (row mb mr 4) ++ "\n"
-                where row mb mr r = (sbRow (gsb mb mr 0) r) ++ "|" ++ (sbRow (gsb mb mr 1) r) ++ "|" ++ (sbRow (gsb mb mr 2) r) 
+              metaRow mr = (row 0) ++ "\n" ++ (row 1) ++ "\n" ++ (row 2) ++ "\n" ++ (row 3) ++ "\n" ++ (row 4) ++ "\n"
+                where row r = (sbRow (gsb 0) r) ++ "|" ++ (sbRow (gsb 1) r) ++ "|" ++ (sbRow (gsb 2) r) 
                         where sbRow = showSubBoardRow
-                              gsb mb mr b = case getSubBoard mb (mr*3 + b) of Just sb -> sb
-                                                                              Nothing -> emptySubBoard
-         
+                              gsb b = getSubBoard' mb (mr*3 + b)
+
+applyToSubBoard' :: Integral a => MetaBoard -> (SubBoard -> SubBoard) -> a -> MetaBoard
+applyToSubBoard' mb f i =  setSuboard mb (f (getSubBoard' mb i)) i 
+
+mapToSubBoards :: MetaBoard -> (SubBoard -> SubBoard) -> MetaBoard
+mapToSubBoards (MetaBoard sbs t w) f = MetaBoard (cellsMap sbs f) t w                                                                   
+
+setTurn :: MetaBoard -> XO -> MetaBoard
+setTurn (MetaBoard c _ w) xo = MetaBoard c xo w
 
 getSubBoard :: (Integral a) => MetaBoard -> a -> Maybe SubBoard
 getSubBoard (MetaBoard c _ _) i = getCell c i
 
+getSubBoard' :: (Integral a) => MetaBoard -> a -> SubBoard
+getSubBoard' mb i = case getSubBoard mb i of Nothing -> error "Out of Range"
+                                             Just a -> a
+setSuboard :: (Integral a) => MetaBoard -> SubBoard -> a -> MetaBoard
+setSuboard (MetaBoard c t w) sb i = MetaBoard (setCell c sb i) t w
+
 emptySubBoard :: SubBoard
-emptySubBoard = SubBoard (Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty) False Empty
+emptySubBoard = SubBoard (Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty, Empty) True Empty
 
 emptyMetaBoard :: MetaBoard
 emptyMetaBoard = MetaBoard (emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard, emptySubBoard) X Empty
@@ -88,6 +112,9 @@ showLook board i = case look board i of Nothing -> "Out of Range"
                                         Just xo -> show xo
 makeLine :: Int -> String
 makeLine i = take i (repeat '=')
+
+cellsMap :: (t, t, t, t, t, t, t, t, t) -> (t -> t1) -> (t1, t1, t1, t1, t1, t1, t1, t1, t1)
+cellsMap (a, b, c, d, e, f, g, h, i) fn = (fn a, fn b, fn c, fn d, fn e, fn f, fn g, fn h, fn i)
 
 getCell :: (Integral a, XOable b) => (b, b, b, b, b, b, b, b, b) -> a ->  Maybe b
 getCell (topLeft, _, _, _, _, _, _, _, _)  0 = Just topLeft
@@ -113,24 +140,38 @@ setCell (a, b, c, d, e, f, g, _, i) botMid   7 = (a, b, c, d, e, f, g, botMid, i
 setCell (a, b, c, d, e, f, g, h, _) botRight 8 = (a, b, c, d, e, f, g, h, botRight)
 setCell x _ _ = x
 
-winner :: Board a => a -> XO
-winner board 
-    | eq3NE (lb 0) (lb 1) (lb 2) = lb 0
-    | eq3NE (lb 3) (lb 4) (lb 5) = lb 3
-    | eq3NE (lb 6) (lb 7) (lb 8) = lb 6
-    | eq3NE (lb 0) (lb 3) (lb 6) = lb 3
-    | eq3NE (lb 1) (lb 4) (lb 7) = lb 1
-    | eq3NE (lb 2) (lb 5) (lb 8) = lb 2
-    | eq3NE (lb 0) (lb 4) (lb 8) = lb 0
-    | eq3NE (lb 6) (lb 4) (lb 2) = lb 6
-    | otherwise = Empty
-    where lb i = case look board i of Nothing -> Empty
-                                      Just a -> a 
-          eq3NE a b c = (a == b) && (b == c) && (a /= Empty)
-
-evalWinner :: Board a => a -> a
-evalWinner board = setXO board $ winner board
-
+makeMoves :: MetaBoard -> [Move] -> Either InvalideMove MetaBoard
+makeMoves mb [] = Right mb
+makeMoves mb ((mm, sm):remaining)
+    | mm > 8 || mm < 0 ||sm > 8 || sm < 0 = Left OutOfRange
+    | isEmpty && isPlaybleSB = makeMoves setUpPlayble remaining
+    | not isEmpty = Left AllReadyOccupied
+    | not isPlaybleSB = Left NotPlayble
+    | otherwise = Right mb
+    where isEmpty = (look' sb sm) == Empty && wonBy sb == Empty
+          isPlaybleSB = isPlayble (getSubBoard' mb mm)
+          sb = (getSubBoard' mb mm)
+          eval = metaWinner $ setSuboard mb (draw sb (turn mb) sm) mm
+          switchTurn = if turn mb == X then setTurn eval O else setTurn eval X
+          resetPlayble = mapToSubBoards switchTurn (flip setPlayble False)
+          subBoardSentTo = getSubBoard' resetPlayble sm  
+          setUpPlayble = if wonBy subBoardSentTo == Empty then applyToSubBoard' resetPlayble (flip setPlayble True) sm else mapToSubBoards resetPlayble (flip setPlayble True)
+          
+          
 metaWinner :: MetaBoard -> MetaBoard
-metaWinner mb@(MetaBoard (a,b,c,d,e,f,g,h,i) t w) = evalWinner (MetaBoard (ev a, ev b, ev c, ev d, ev e, ev f, ev g, ev h, ev i) t w)
-    where ev = evalWinner
+metaWinner mb = evalWinner (mapToSubBoards mb evalWinner)
+    where evalWinner :: Board a => a -> a
+          evalWinner board = setXO board $ winner board
+            where   winner :: Board a => a -> XO
+                    winner board 
+                        | eq3NE (lb 0) (lb 1) (lb 2) = lb 0
+                        | eq3NE (lb 3) (lb 4) (lb 5) = lb 3
+                        | eq3NE (lb 6) (lb 7) (lb 8) = lb 6
+                        | eq3NE (lb 0) (lb 3) (lb 6) = lb 3
+                        | eq3NE (lb 1) (lb 4) (lb 7) = lb 1
+                        | eq3NE (lb 2) (lb 5) (lb 8) = lb 2
+                        | eq3NE (lb 0) (lb 4) (lb 8) = lb 0
+                        | eq3NE (lb 6) (lb 4) (lb 2) = lb 6
+                        | otherwise = Empty
+                        where lb = look' board
+                              eq3NE a b c = (a == b) && (b == c) && (a /= Empty)
