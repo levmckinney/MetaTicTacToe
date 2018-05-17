@@ -20,6 +20,7 @@ class XOable xoable where
 class (XOable board) => Board board where
     look :: (Integral a) => board -> a -> Maybe XO  
     draw :: (Integral a) => board -> XO -> a -> board
+    
 look' :: (Integral a, Board b) => b -> a -> XO 
 look' b i = case look b i of Nothing -> error "out of range"
                              Just a -> a
