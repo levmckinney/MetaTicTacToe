@@ -22,5 +22,5 @@ gameLoop moves = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard moves
                             gameLoop (init moves)
 
 getMove = do sMove <- getLine
-             let lMove = map read (words sMove) :: [Integer] -- find a way to handle this the error that can be trown
+             let lMove = map read (words sMove) :: [Int] -- find a way to handle this the error that can be trown
              return (lMove !! 0, lMove !! 1)

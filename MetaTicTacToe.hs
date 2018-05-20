@@ -9,6 +9,7 @@ module MetaTicTacToe
 ,  turn
 ,  gameWonBy
 ,  emptyMetaBoard
+,  possibleMoves
 ) where
 
 type Cells b = (b, b, b, b, b, b, b, b, b)
@@ -158,13 +159,13 @@ setCell x _ _ = x
 
 makeMoves :: MetaBoard -> [Move] -> Either InvalideMove MetaBoard
 makeMoves mb [] = Right mb
-makeMoves mb ((mm, sm):remaining)
+makeMoves mb ((move@(mm, sm)):remaining)
     | mm > 8 || mm < 0 ||sm > 8 || sm < 0 = Left OutOfRange
-    | isEmpty && isPlaybleSB = makeMoves setUpPlayble remaining
-    | not isEmpty = Left AllReadyOccupied
+    | empty && isPlaybleSB = makeMoves setUpPlayble remaining
+    | not empty = Left AllReadyOccupied
     | not isPlaybleSB = Left NotPlayble
     | otherwise = Right mb
-    where isEmpty = (look' sb sm) == Empty && wonBy sb == Empty
+    where empty = isEmpty mb move 
           isPlaybleSB = isPlayble (getSubBoard' mb mm)
           sb = (getSubBoard' mb mm)
           eval = metaWinner $ setSuboard mb (draw sb (turn mb) sm) mm
@@ -172,8 +173,14 @@ makeMoves mb ((mm, sm):remaining)
           resetPlayble = mapToSubBoards switchTurn (flip setPlayble False)
           subBoardSentTo = getSubBoard' resetPlayble sm  
           setUpPlayble = if wonBy subBoardSentTo == Empty then applyToSubBoard' resetPlayble (flip setPlayble True) sm else mapToSubBoards resetPlayble (flip setPlayble True)
-          
-          
+
+isEmpty :: MetaBoard -> Move -> Bool
+isEmpty mb (mm, sm) = look' sb sm == Empty && wonBy sb == Empty
+    where sb = getSubBoard' mb mm
+
+possibleMoves :: MetaBoard -> [Move]
+possibleMoves mb = [(mm, sm) | mm <- [0..8], sm <- [0..8], isPlayble $ getSubBoard' mb mm, isEmpty mb (mm, sm)]    
+
 metaWinner :: MetaBoard -> MetaBoard
 metaWinner mb = evalWinner (mapToSubBoards mb evalWinner)
     where evalWinner :: Board a => a -> a
@@ -191,3 +198,7 @@ metaWinner mb = evalWinner (mapToSubBoards mb evalWinner)
                         | otherwise = Empty
                         where lb = look' board
                               eq3NE a b c = (a == b) && (b == c) && (a /= Empty)
+
+shuck :: Either InvalideMove MetaBoard -> MetaBoard
+shuck either = case either of Right mb -> mb
+                              Left  err -> error "dont use shuck in non testing"
