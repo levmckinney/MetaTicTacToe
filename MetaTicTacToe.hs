@@ -1,17 +1,21 @@
 module MetaTicTacToe
-(  XO
+(  XO (..)
+,  InvalideMove (..)
 ,  MetaBoard
 ,  SubBoard
 ,  getSubBoard
 ,  look
 ,  makeMoves
+,  turn
+,  gameWonBy
+,  emptyMetaBoard
 ) where
 
 type Cells b = (b, b, b, b, b, b, b, b, b)
 
 type Move = (Int, Int)
 
-data InvalideMove = OutOfRange | AllReadyOccupied | NotPlayble deriving Show
+data InvalideMove = OutOfRange | AllReadyOccupied | NotPlayble | GoodMove deriving (Show, Eq)
 
 class XOable xoable where
     toXO :: xoable -> XO
