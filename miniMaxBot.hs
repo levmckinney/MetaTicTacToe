@@ -1,9 +1,41 @@
 import MiniMax
 import MetaTicTacToe
 
-utility :: [Move] -> Integer
-utility moves = gsb 0 + gsb 1 + gsb 2 + gsb 3 + gsb 4 + gsb 5 + gsb 6 + gsb 7 + gsb 8
-    where gsb i = if look' (makeMoves' moves) i == X then 1 else 0
+botMove moves depth
+    | even(length moves)  = miniMax moves depth successor (utility X)
+    | odd(length moves) = miniMax moves depth successor (utility O)
+
+botLeaf moves depth
+    | even(length moves)  = miniMaxLeaf moves depth successor (utility X)
+    | odd(length moves) = miniMaxLeaf moves depth successor (utility O)
+
+
+subBoardWinValue = 10
+midCellValue = 1
+
+utility :: XO -> [Move] -> Integer
+utility xo moves = subBoardsU + gameWinU
+    where mb = makeMoves' moves
+          lsb i = look' mb i
+          gsbU win
+            | win == Empty = 0
+            | win == xo = subBoardWinValue
+            | otherwise = -subBoardWinValue
+          subBoardsU = gsbU(lsb 0) + gsbU(lsb 1) + gsbU(lsb 2) + gsbU(lsb 3) + gsbU(lsb 4) + gsbU(lsb 5) + gsbU(lsb 6) + gsbU(lsb 7) + gsbU(lsb 8)
+          gameWinU
+            | toXO mb == Empty = 0
+            | toXO mb == xo    = integerInfinity
+            | otherwise        = integerNegInfinity
+          midControlU = cellU 0 + cellU 1 + cellU 2 + cellU 3 + cellU 4 + cellU 5 + cellU 6 + cellU 7 + cellU 8
+            where midBoard = getSubBoard' mb 4
+                  cellU i = midXOU (look' midBoard i)
+                  midXOU ox
+                    | ox == Empty = 0
+                    | ox == xo    = midCellValue
+                    | otherwise   = -midCellValue
+
+          
+          
 
 successor :: [Move] -> [Move]
 successor moves = possibleMoves . makeMoves' $ moves

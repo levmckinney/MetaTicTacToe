@@ -10,6 +10,7 @@ module MetaTicTacToe
 ,  look'
 ,  makeMoves
 ,  turn
+,  toXO
 ,  gameWonBy
 ,  emptyMetaBoard
 ,  possibleMoves
