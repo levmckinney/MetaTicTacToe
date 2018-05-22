@@ -3,8 +3,11 @@ module MetaTicTacToe
 ,  InvalideMove (..)
 ,  MetaBoard
 ,  SubBoard
+,  Move (..)
 ,  getSubBoard
+,  getSubBoard'
 ,  look
+,  look'
 ,  makeMoves
 ,  turn
 ,  gameWonBy
@@ -14,7 +17,7 @@ module MetaTicTacToe
 
 type Cells b = (b, b, b, b, b, b, b, b, b)
 
-type Move = (Int, Int)
+type Move = (Integer, Integer)
 
 data InvalideMove = OutOfRange | AllReadyOccupied | NotPlayble | GoodMove deriving (Show, Eq)
 
