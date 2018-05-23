@@ -5,7 +5,8 @@ import System.IO
 import System.IO.Error 
 import MiniMaxBot
 
-main = do putStrLn "PvP or PvAI"
+main = do putStrLn "Moves should be of the form: \n1 2 \nor \n0 8 \nBoth numbers should be in the range 0 to 8. \nTry making some moves in PvP to get the hang of it. :D \n"
+          putStrLn "PvP or PvAI"
           pvppvai <- getLine
           if pvppvai == "PvP" 
           then pvPGameLoop [] 
@@ -52,7 +53,5 @@ pvPGameLoop moves = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard move
                                pvPGameLoop (init moves)
 
 getMove = do sMove <- getLine
-             let lMove = map read (words sMove) :: [Int] -- find a way to handle this the error that can be trown
+             let lMove = map read (words sMove) :: [Int] -- find a way to handle the error that can be trown
              return (lMove !! 0, lMove !! 1)
-
-flipXO xo = if xo == MT.X then MT.O else MT.X
