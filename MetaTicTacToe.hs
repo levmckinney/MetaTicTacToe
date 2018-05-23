@@ -50,8 +50,8 @@ instance Show XO where
     show Empty = " "
 
 -- this data is used to represent the state of one of the Suboards of the meta Boards
--- isPlayble reprents if the curent player is able to play on this SubBoard
-data SubBoard = SubBoard {cells :: Cells XO, isPlayble :: Bool, wonBy :: XO}
+-- isPlayable reprents if the curent player is able to play on this SubBoard
+data SubBoard = SubBoard {cells :: Cells XO, isPlayable :: Bool, wonBy :: XO}
 
 instance XOable SubBoard where
     toXO = wonBy
@@ -79,7 +79,7 @@ showSubBoardRow sb i = case (sb, i) of ((SubBoard _ _ X), 0) -> "\\   /"
                                        (_, 3)                -> line
                                        (sb, 4)               -> xoRow 2
     where xoRow r = (showLook sb (r*3 + 0)) ++ "|" ++ (showLook sb (r*3 + 1)) ++ "|" ++ (showLook sb (r*3 + 2))
-          line = if isPlayble sb then take 5 (repeat '-') else makeLine 5
+          line = if isPlayable sb then take 5 (repeat '-') else makeLine 5
 
 setPlayble :: SubBoard -> Bool -> SubBoard
 setPlayble (SubBoard c _ w) b = SubBoard c b w 
@@ -184,15 +184,15 @@ makeMoves :: MetaBoard -> [Move] -> Either InvalideMove MetaBoard
 makeMoves mb [] = Right mb
 makeMoves mb ((move@(mm, sm)):remaining)
     | mm > 8 || mm < 0 ||sm > 8 || sm < 0 = Left OutOfRange
-    | empty && isPlaybleSB = makeMoves setUpPlayble remaining
+    | empty && isPlayableSB = makeMoves setUpPlayble remaining
     | not empty = Left AllReadyOccupied
-    | not isPlaybleSB = Left NotPlayble
+    | not isPlayableSB = Left NotPlayble
     | otherwise = Right mb
-    where empty = isEmpty mb move -- checks if moving to an alread taken cell
-          isPlaybleSB = isPlayble (getSubBoard' mb mm) -- check if the subBoard being played on isPlable
+    where empty = isEmpty mb move -- checks if moving to an already taken cell
+          isPlayableSB = isPlayable (getSubBoard' mb mm) -- check if the subBoard being played on isPlable
           sb = (getSubBoard' mb mm) -- the SubBoard the curent move is being played on
           -- this part can be read sequnchely
-          eval = metaWinner $ setSuboard mb (draw sb (turn mb) sm) mm -- make Moves and check winner in subBoards and MetaBoards
+          eval = metaWinner $ setSuboard mb (draw sb (turn mb) sm) mm -- makes Moves and updates the winners in subBoards and MetaBoard
           switchTurn = if turn mb == X then setTurn eval O else setTurn eval X -- swith the turn on the MetaBoard
           resetPlayble = mapToSubBoards switchTurn (flip setPlayble False) -- sets all subBoards to unplable
           subBoardSentTo = getSubBoard' resetPlayble sm   -- this is the subBoard that the next player has been sent to. Calculated by looking at the move on the suboard and then looking at the subBoard in the same position.
@@ -208,7 +208,7 @@ isEmpty mb (mm, sm) = look' sb sm == Empty && wonBy sb == Empty
 
 -- Returns all possible moves that could be made from a given subBoard
 possibleMoves :: MetaBoard -> [Move]
-possibleMoves mb = [(mm, sm) | mm <- [0..8], sm <- [0..8], isPlayble $ getSubBoard' mb mm, isEmpty mb (mm, sm)]    
+possibleMoves mb = [(mm, sm) | mm <- [0..8], sm <- [0..8], isPlayable $ getSubBoard' mb mm, isEmpty mb (mm, sm)]    
 
 --Evaluates the winner of a MetaBoard and its subBoards
 metaWinner :: MetaBoard -> MetaBoard

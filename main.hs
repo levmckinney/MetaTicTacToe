@@ -28,7 +28,7 @@ pvAIGameLoop moves xo = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard 
                                                         nextMove <- getMove 
                                                         pvAIGameLoop (moves ++ [nextMove]) xo
                                                 else return ()
-                                            else do putStrLn "How deep to seach (2-4 is recomended):"
+                                            else do putStrLn "How deep to search (2-7 is recomended):"
                                                     depthStr <- getLine
                                                     let aiMove = botMove moves (read depthStr)
                                                     putStrLn ("Bot Thinking..." ++ (show aiMove))
