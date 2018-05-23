@@ -1,6 +1,12 @@
+
+module MiniMaxBot 
+(
+    botMove
+) where
+
 import MiniMax
 import MetaTicTacToe
-
+    
 botMove moves depth
     | even(length moves)  = miniMax moves depth successor (utility X)
     | odd(length moves) = miniMax moves depth successor (utility O)
