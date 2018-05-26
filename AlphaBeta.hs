@@ -5,6 +5,8 @@ module AlphaBeta
 ,  integerNegInfinity
 ,  integerInfinity
 ,  Leaf
+,  move
+,  utility
 ) where
 
 -- Leaf holds utility of the final gamestate to represent.

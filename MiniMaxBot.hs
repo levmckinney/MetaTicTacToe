@@ -2,11 +2,13 @@
 module MiniMaxBot 
 (
     botMove
+,   botLeaf 
 ) where
 
 import qualified MiniMax as MM 
 import qualified AlphaBeta as AB
 import MetaTicTacToe
+import System.Random
 
 botMove :: [Move] -> Integer -> Move
 botMove moves depth
@@ -19,12 +21,16 @@ botLeaf moves depth
     | odd(length moves) = AB.miniMaxLeaf moves depth successor (utility O)
 
 
-subBoardWinValue = 10
-midCellValue = 1
+subBoardWinValue = 100
+midCellValue = 10
+maxMinNoise = 5
 
 utility :: XO -> [Move] -> Integer
-utility xo moves = subBoardsU + gameWinU
-    where mb = makeMoves' moves
+utility _ [] = 0
+utility xo moves = subBoardsU + gameWinU + randomOffset
+    where randomOffset = fst $ randomR (-maxMinNoise, maxMinNoise) (mkStdGen seed)
+            where seed = sum (map fst moves)
+          mb = makeMoves' moves
           lsb i = look' mb i
           gsbU win
             | win == Empty = 0
