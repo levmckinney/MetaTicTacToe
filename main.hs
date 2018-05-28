@@ -4,6 +4,7 @@ import System.Environment
 import System.IO  
 import System.IO.Error 
 import MiniMaxBot
+import RandomBot
 import AlphaBeta
 
 main = do putStrLn "Moves should be of the form: \n1 2 \nor \n0 8 \nBoth numbers should be in the range 0 to 8. \nTry making some moves in PvP to get the hang of it. :D \n"
@@ -31,12 +32,15 @@ pvAIGameLoop moves xo = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard 
                                                 else return ()
                                             else do putStrLn "How deep to search (2-7 is recomended):"
                                                     depthStr <- getLine
-                                                    let aiLeaf = botLeaf moves (read depthStr)
-                                                        aiMove = move aiLeaf
-                                                        aiPFU = utility aiLeaf
-                                                    putStrLn ("Bot Thinking..." ++ (show aiMove) ++ " PFU: " ++ (show aiPFU))
-                                                    pvAIGameLoop (moves ++ [aiMove]) xo
-              
+                                                    let maybeAiLeaf = botLeaf moves (read depthStr) -- change bot here
+                                                    if maybeAiLeaf == Nothing
+                                                    then print board  
+                                                    else do let aiLeaf = case maybeAiLeaf of Just a -> a
+                                                                aiMove = move aiLeaf
+                                                                aiPFU = utility aiLeaf
+                                                            putStrLn ("Bot Thinking..." ++ (show aiMove) ++ " PFU: " ++ (show aiPFU))
+                                                            pvAIGameLoop (moves ++ [aiMove]) xo
+          
                                     else do print moveQuality
                                             pvAIGameLoop (init moves) xo
         

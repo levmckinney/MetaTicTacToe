@@ -4,14 +4,12 @@ module AlphaBeta
 ,  miniMaxLeaf
 ,  integerNegInfinity
 ,  integerInfinity
-,  Leaf
-,  move
-,  utility
+,  Leaf(..)
 ) where
 
 -- Leaf holds utility of the final gamestate to represent.
 -- The move is first move in the branch that spawed it. 
-data Leaf m = Leaf {move :: m, utility :: Integer} deriving Show
+data Leaf m = Leaf {move :: m, utility :: Integer} deriving (Show, Eq)
 
 type NodeState = (Integer,Integer)
 

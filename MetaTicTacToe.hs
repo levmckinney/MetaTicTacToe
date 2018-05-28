@@ -203,7 +203,7 @@ makeMoves mb ((move@(mm, sm)):remaining)
 
 --Checks if the cell is empty and the suboard is not won by anyone
 isEmpty :: MetaBoard -> Move -> Bool
-isEmpty mb (mm, sm) = look' sb sm == Empty && wonBy sb == Empty
+isEmpty mb (mm, sm) = look' sb sm == Empty && toXO sb == Empty && toXO mb == Empty
     where sb = getSubBoard' mb mm
 
 -- Returns all possible moves that could be made from a given subBoard

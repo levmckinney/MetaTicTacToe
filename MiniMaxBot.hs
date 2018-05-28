@@ -3,6 +3,7 @@ module MiniMaxBot
 (
     botMove
 ,   botLeaf 
+,   successor
 ) where
 
 import qualified MiniMax as MM 
@@ -10,15 +11,14 @@ import qualified AlphaBeta as AB
 import MetaTicTacToe
 import System.Random
 
-botMove :: [Move] -> Integer -> Move
-botMove moves depth
-    | even(length moves)  = AB.miniMax moves depth successor (utility X)
-    | odd(length moves) = AB.miniMax moves depth successor (utility O)
+botMove :: [Move] -> Integer -> Maybe Move
+botMove moves depth = AB.move `fmap` botLeaf moves depth
 
-botLeaf :: [Move] -> Integer -> AB.Leaf Move
+botLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move)
 botLeaf moves depth
-    | even(length moves)  = AB.miniMaxLeaf moves depth successor (utility X)
-    | odd(length moves) = AB.miniMaxLeaf moves depth successor (utility O)
+    | successor moves == [] = Nothing
+    | even(length moves)  = Just (AB.miniMaxLeaf moves depth successor (utility X))
+    | odd(length moves) = Just (AB.miniMaxLeaf moves depth successor (utility O))
 
 
 subBoardWinValue = 100
@@ -29,7 +29,7 @@ utility :: XO -> [Move] -> Integer
 utility _ [] = 0
 utility xo moves = subBoardsU + gameWinU + randomOffset
     where randomOffset = fst $ randomR (-maxMinNoise, maxMinNoise) (mkStdGen seed)
-            where seed = sum (map fst moves)
+            where seed = sum (map fst moves) + 2
           mb = makeMoves' moves
           lsb i = look' mb i
           gsbU win
