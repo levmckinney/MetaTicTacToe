@@ -13,6 +13,7 @@ module MetaTicTacToe
 ,  toXO
 ,  emptyMetaBoard
 ,  possibleMoves
+,  makeMoves'
 ) where
 
 --this is a type ment to represent the 3x3 cells of a tictactoe board
@@ -229,7 +230,7 @@ metaWinner mb = evalWinner (mapToSubBoards mb evalWinner)
                         where lb = look' board
                               eq3NE a b c = (a == b) && (b == c) && (a /= Empty)
 
--- this is just for testing in ghci
-shuck :: Either InvalideMove MetaBoard -> MetaBoard
-shuck either = case either of Right mb -> mb
-                              Left  err -> error "dont use shuck in non testing"
+-- simpler vertion of make move will throw errors if bad moves are played
+makeMoves' :: [Move] -> MetaBoard
+makeMoves' moves = case makeMoves emptyMetaBoard moves of Left err -> error ("the bot is making an invalid move " ++ show err)
+                                                          Right mb -> mb

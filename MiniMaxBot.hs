@@ -14,7 +14,7 @@ import System.Random
 botMove :: [Move] -> Integer -> Maybe Move
 botMove moves depth = AB.move `fmap` botLeaf moves depth
 
-botLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move)
+botLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
 botLeaf moves depth
     | successor moves == [] = Nothing
     | even(length moves)  = Just (AB.miniMaxLeaf moves depth successor (utility X))
@@ -54,7 +54,3 @@ utility xo moves = subBoardsU + gameWinU + randomOffset
 
 successor :: [Move] -> [Move]
 successor moves = possibleMoves . makeMoves' $ moves
-
-makeMoves' :: [Move] -> MetaBoard
-makeMoves' moves = case makeMoves emptyMetaBoard moves of Left err -> error "the bot is making an invalid move"
-                                                          Right mb -> mb
