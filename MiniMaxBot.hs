@@ -11,15 +11,24 @@ import qualified AlphaBeta as AB
 import MetaTicTacToe
 import System.Random
 
-botMove :: [Move] -> Integer -> Maybe Move
+alphBetaMove :: [Move] -> Integer -> Maybe Move
 botMove moves depth = AB.move `fmap` botLeaf moves depth
 
-botLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
+alphBetaLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
 botLeaf moves depth
     | successor moves == [] = Nothing
     | even(length moves)  = Just (AB.miniMaxLeaf moves depth successor (utility X))
     | odd(length moves) = Just (AB.miniMaxLeaf moves depth successor (utility O))
 
+miniMaxMove :: [Move] -> Integer -> Maybe Move
+botMove moves depth = AB.move `fmap` botLeaf moves depth
+
+miniMaxLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
+botLeaf moves depth
+    | successor moves == [] = Nothing
+    | even(length moves)  = Just (MM.miniMaxLeaf moves depth successor (utility X))
+    | odd(length moves) = Just (MM.miniMaxLeaf moves depth successor (utility O))
+    
 
 subBoardWinValue = 100
 midCellValue = 10

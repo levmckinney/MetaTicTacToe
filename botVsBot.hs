@@ -7,58 +7,38 @@ import MiniMaxBot
 import RandomBot
 import AlphaBeta
 import System.Random
+import Data.Maybe
+
+type Bot = ([Move] -> Maybe Move)
 
 main = do gen <- getStdGen
           playGame (0,0,0) 100
 
 playGame :: (Integer, Integer, Integer) -> Integer -> IO ()
-playGame winloss rounds = do if rounds > 0 
-                             then do stdget <- getStdGen
-                                     gen <- newStdGen
-                                     let resultString (b,r,d) = ("bot has won: " ++ show b ++ " Random has won: " ++ show r ++ " Draws: " ++ show d ++ " gen was: " ++ show stdget)
+playGame winloss rounds = do if rounds > 0
+                             then do gen <- newStdGen
+                                     let resultString (b,r,d) = ("bot has won: " ++ show b ++ " Random has won: " ++ show r ++ " Draws: " ++ show d ++ " gen was: " ++ show gen)
                                      putStrLn $ resultString winloss
-                                     playGame (playFullRound winloss gen) (rounds - 1)
+                                     playGame (playFullRound randomMove (flip alphBetaLeaf 3) winloss gen) (rounds - 1)
                              else return ()
 
-playFullRound :: (Integer, Integer, Integer) -> StdGen -> (Integer, Integer, Integer)
-playFullRound (iBotWins, iRandWins, iDraws) gen = (iBotWins + botXWins + botOWins, iRandWins + randXWins + randOWins, iDraws + draws + someThingWrong)
-    where botXWins = if xBot == X then 1 else 0
-          botOWins = if xRand == O then 1 else 0
-          randXWins = if xRand == X then 1 else 0
-          randOWins = if xBot == O then 1 else 0
-          draws = (if xBot == Empty then 1 else 0) + (if xRand == Empty then 1 else 0)
-          someThingWrong-- just for testing
-             | botXWins + botOWins + randXWins + randOWins + draws == 2 = 0
-             | otherwise = error $ "why is this happening xBot: " ++ show xBot ++ " xRand: " ++ show xRand ++ " botXwins: " ++ show botXWins ++ " botOWins: " ++ show botOWins ++ " randXWins " ++ show randXWins ++ " randOwins: " ++ show randOWins ++ " draws: " ++ show draws 
-          xBot = playBotGameBotX gen
-          xRand = playBotGameRandX gen
-
-
-
-
-botDepth = 3
+playFullRound :: Bot -> Bot -> (Integer, Integer, Integer) -> StdGen -> (Integer, Integer, Integer)
+playFullRound bot1 bot2 (iBot1Wins, iBot2Wins, iDraws) gen = (iBot1Wins + bot1Wins, iBot2Wins + bot2Wins, iDraws + draws)
+    where bot1Wins = (if xBot1Result == X then 1 else 0) + (if xBot2Result == O then 1 else 0)
+          bot2Wins = (if xBot2Result == X then 1 else 0) + (if xBot1Result == O then 1 else 0)
+          draws = (if xBot1Result == Empty then 1 else 0) + (if xBot2Result == Empty then 1 else 0)
+          xBot1Result = playBotGame bot1 bot2
+          xBot2Result = playBotGame bot2 bot1
 
 addMoves moves = fmap (\m -> moves ++ [m])
-
-playBotGameBotX :: StdGen -> XO
-playBotGameBotX startGen = nextRoud startGen []
-    where nextRoud gen moves
-            | maybeBotMakeMove == Nothing = toXO $ makeMoves' moves
-            | maybeRandMakeMove == Nothing = toXO $ makeMoves' moves
-            | otherwise = nextRoud (snd $ (random gen :: (Integer ,StdGen))) randMakeMove
-            where maybeBotMakeMove = addMoves moves $ botMove moves botDepth
-                  botMakeMove = case maybeBotMakeMove of Just m -> m
-                  maybeRandMakeMove = addMoves botMakeMove $ extraRandomMove gen botMakeMove
-                  randMakeMove = case maybeRandMakeMove of Just m -> m
-
-playBotGameRandX :: StdGen -> XO
-playBotGameRandX startGen = nextRoud startGen []
-    where nextRoud gen moves
-            | maybeRandMakeMove == Nothing = toXO $ makeMoves' moves
-            | maybeBotMakeMove == Nothing = toXO $ makeMoves' moves
-            | otherwise = nextRoud ((snd $ (random gen :: (Integer ,StdGen)))) botMakeMove
-            where maybeRandMakeMove = addMoves moves $ extraRandomMove gen moves
-                  randMakeMove = case maybeRandMakeMove of Just m -> m
-                  maybeBotMakeMove = addMoves randMakeMove $ botMove randMakeMove botDepth
-                  botMakeMove = case maybeBotMakeMove of Just m -> m
     
+playBotGame :: Bot -> Bot -> XO
+playBotGame xBot oBot = nextRound []
+    where nextRound moves
+            | maybeBotXMoves == Nothing = toXO $ makeMoves' moves
+            | maybeBotOMoves == Nothing = toXO $ makeMoves' moves
+            | otherwise = nextRound botOMoves
+            where maybeBotXMoves = addMoves moves $ xBot moves
+                  botXMoves = fromJust maybeBotXMoves
+                  maybeBotOMoves = addMoves moves $ oBot moves
+                  botOMoves = fromJust maybeBotOMoves

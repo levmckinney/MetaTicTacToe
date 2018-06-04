@@ -32,7 +32,7 @@ pvAIGameLoop moves xo = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard 
                                                 else return ()
                                             else do putStrLn "How deep to search (2-7 is recomended):"
                                                     depthStr <- getLine
-                                                    let maybeAiLeaf = botLeaf moves (read depthStr) -- change bot here
+                                                    let maybeAiLeaf = alphBetaLeaf moves (read depthStr) -- change bot here
                                                     if maybeAiLeaf == Nothing
                                                     then print board  
                                                     else do let aiLeaf = case maybeAiLeaf of Just a -> a
