@@ -6,6 +6,7 @@ import System.IO.Error
 import MiniMaxBot
 import RandomBot
 import AlphaBeta
+import System.Random
 
 main = do putStrLn "Moves should be of the form: \n1 2 \nor \n0 8 \nBoth numbers should be in the range 0 to 8. \nTry making some moves in PvP to get the hang of it. :D \n"
           putStrLn "PvP or PvAI"
@@ -32,7 +33,8 @@ pvAIGameLoop moves xo = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard 
                                                 else return ()
                                             else do putStrLn "How deep to search (2-7 is recomended):"
                                                     depthStr <- getLine
-                                                    let maybeAiLeaf = alphBetaLeaf moves (read depthStr) -- change bot here
+                                                    gen <- newStdGen
+                                                    let maybeAiLeaf = alphBetaBotLeaf (read depthStr) gen moves -- change bot here
                                                     if maybeAiLeaf == Nothing
                                                     then print board  
                                                     else do let aiLeaf = case maybeAiLeaf of Just a -> a

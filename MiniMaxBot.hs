@@ -1,8 +1,10 @@
 
 module MiniMaxBot 
 (
-    botMove
-,   botLeaf 
+    alphBetaBotMove
+,   alphBetaBotLeaf
+,   miniMaxBotMove
+,   miniMaxBotLeaf
 ,   successor
 ) where
 
@@ -11,34 +13,33 @@ import qualified AlphaBeta as AB
 import MetaTicTacToe
 import System.Random
 
-alphBetaMove :: [Move] -> Integer -> Maybe Move
-botMove moves depth = AB.move `fmap` botLeaf moves depth
+alphBetaBotMove :: Integer -> StdGen -> [Move] -> Maybe Move
+alphBetaBotMove depth gen moves = AB.move `fmap` alphBetaBotLeaf depth gen moves
 
-alphBetaLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
-botLeaf moves depth
+alphBetaBotLeaf :: Integer -> StdGen -> [Move] -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
+alphBetaBotLeaf depth gen moves
     | successor moves == [] = Nothing
-    | even(length moves)  = Just (AB.miniMaxLeaf moves depth successor (utility X))
-    | odd(length moves) = Just (AB.miniMaxLeaf moves depth successor (utility O))
+    | even(length moves)  = Just (AB.miniMaxLeaf moves depth successor (utility X gen))
+    | odd(length moves) = Just (AB.miniMaxLeaf moves depth successor (utility O gen))
 
-miniMaxMove :: [Move] -> Integer -> Maybe Move
-botMove moves depth = AB.move `fmap` botLeaf moves depth
+miniMaxBotMove :: Integer -> StdGen -> [Move] -> Maybe Move
+miniMaxBotMove depth gen moves = MM.move `fmap` miniMaxBotLeaf depth gen moves
 
-miniMaxLeaf :: [Move] -> Integer -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
-botLeaf moves depth
+miniMaxBotLeaf :: Integer -> StdGen -> [Move] -> Maybe (MM.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
+miniMaxBotLeaf depth gen moves
     | successor moves == [] = Nothing
-    | even(length moves)  = Just (MM.miniMaxLeaf moves depth successor (utility X))
-    | odd(length moves) = Just (MM.miniMaxLeaf moves depth successor (utility O))
+    | even(length moves)  = Just (MM.miniMaxLeaf moves depth successor (utility X gen))
+    | odd(length moves) = Just (MM.miniMaxLeaf moves depth successor (utility O gen))
     
 
 subBoardWinValue = 100
 midCellValue = 10
 maxMinNoise = 5
 
-utility :: XO -> [Move] -> Integer
-utility _ [] = 0
-utility xo moves = subBoardsU + gameWinU + randomOffset
-    where randomOffset = fst $ randomR (-maxMinNoise, maxMinNoise) (mkStdGen seed)
-            where seed = sum (map fst moves) + 2
+utility :: XO -> StdGen -> [Move] -> Integer
+utility _ _ [] = 0
+utility xo gen moves = subBoardsU + gameWinU + randomOffset
+    where randomOffset = fst $ randomR (-maxMinNoise, maxMinNoise) gen
           mb = makeMoves' moves
           lsb i = look' mb i
           gsbU win

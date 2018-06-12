@@ -5,6 +5,7 @@ module MiniMax
 ,  integerNegInfinity
 ,  integerInfinity
 ,  Leaf
+,  move
 ) where
 
 -- Represnets the leaf of the game tree. It holds the top move that spawned it and the utility of the final gamestate it represents.
