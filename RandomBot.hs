@@ -9,6 +9,8 @@ import MiniMaxBot
 import MetaTicTacToe
 import System.Random
 import Data.Maybe
+import MetaTicTacToeBot
+
 
 randomMove :: StdGen -> [Move] -> Maybe Move
 randomMove gen moves
@@ -17,5 +19,5 @@ randomMove gen moves
     where nextMoves = successor moves
 
 
-randomLeaf :: StdGen -> [Move] -> Integer -> Maybe (Leaf Move)
-randomLeaf gen moves i = maybe Nothing (\m -> Just (Leaf m 0)) (randomMove gen moves)
+randomLeaf :: StdGen -> [Move] -> Maybe (Leaf Move)
+randomLeaf gen moves = maybe Nothing (\m -> Just (Leaf m 0)) (randomMove gen moves)

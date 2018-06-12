@@ -7,6 +7,9 @@ import MiniMaxBot
 import RandomBot
 import AlphaBeta
 import System.Random
+import Data.Maybe
+import MetaTicTacToeBot
+
 
 main = do putStrLn "Moves should be of the form: \n1 2 \nor \n0 8 \nBoth numbers should be in the range 0 to 8. \nTry making some moves in PvP to get the hang of it. :D \n"
           putStrLn "PvP or PvAI"
@@ -19,48 +22,69 @@ main = do putStrLn "Moves should be of the form: \n1 2 \nor \n0 8 \nBoth numbers
                   then pvAIGameLoop [] MT.X
                   else pvAIGameLoop [] MT.O
 
-pvAIGameLoop moves xo = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard moves
-                           let board = case etherBoardError of Right b -> b
-                                                               Left err -> MT.emptyMetaBoard      
-                           let moveQuality = case etherBoardError of Right b -> MT.GoodMove
-                                                                     Left err -> err
+pvAIGameLoop moves xo = do let etherBoardORError = MT.makeMoves MT.emptyMetaBoard moves
+                           let board = case etherBoardORError of Right b -> b
+                                                                 Left err -> MT.emptyMetaBoard      
+                           let moveQuality = case etherBoardORError of Right b -> MT.GoodMove
+                                                                       Left err -> err
                            do if moveQuality == MT.GoodMove 
                                    then do if MT.turn board == xo 
                                            then if MT.toXO board == MT.Empty
                                                 then do putStrLn ((show board) ++ "\n\n" ++ "It's " ++ (show $ MT.turn board) ++ "'s move.")
-                                                        nextMove <- getMove 
-                                                        pvAIGameLoop (moves ++ [nextMove]) xo
+                                                        maybeNexMove <- getMove 
+                                                        if maybeNexMove /= Nothing
+                                                        then pvAIGameLoop (moves ++ [fromJust maybeNexMove]) xo
+                                                        else do putStrLn "That input was invalid. All moves but be of the form:   Num Num   \nExample:0 8"
+                                                                restartMove
                                                 else return ()
-                                            else do putStrLn "How deep to search (2-7 is recomended):"
+                                            else do putStrLn "How deep to search (2-3 is recomended):"
                                                     depthStr <- getLine
                                                     gen <- newStdGen
-                                                    let maybeAiLeaf = alphBetaBotLeaf (read depthStr) gen moves -- change bot here
-                                                    if maybeAiLeaf == Nothing
-                                                    then print board  
-                                                    else do let aiLeaf = case maybeAiLeaf of Just a -> a
-                                                                aiMove = move aiLeaf
-                                                                aiPFU = utility aiLeaf
-                                                            putStrLn ("Bot Thinking..." ++ (show aiMove) ++ " PFU: " ++ (show aiPFU))
-                                                            pvAIGameLoop (moves ++ [aiMove]) xo
-          
+                                                    let readDepth = reads depthStr :: [(Integer, String)]
+                                                        checkDepth [] = Nothing
+                                                        checkDepth [(d,_)] = Just d
+                                                        maybeDepth = checkDepth readDepth
+                                                    if maybeDepth /= Nothing
+                                                    then do let maybeAiLeaf = miniMaxBotLeaf (fromJust maybeDepth) gen moves -- change bot here
+                                                            if maybeAiLeaf == Nothing
+                                                            then print board  
+                                                            else do let aiLeaf = case maybeAiLeaf of Just a -> a
+                                                                        aiMove = move aiLeaf
+                                                                        aiPFU = utility aiLeaf
+                                                                    putStrLn ("Bot Thinking..." ++ (show aiMove) ++ " PFU: " ++ (show aiPFU))
+                                                                    pvAIGameLoop (moves ++ [aiMove]) xo
+                                                    else do putStrLn "Depth is a number. Just type a number. It should be in the range of 2-3 for the best results."
+                                                            restartMove
                                     else do print moveQuality
-                                            pvAIGameLoop (init moves) xo
-        
-pvPGameLoop moves = do let etherBoardError = MT.makeMoves MT.emptyMetaBoard moves
-                       let board = case etherBoardError of Right b -> b
-                                                           Left err -> MT.emptyMetaBoard
+                                            restartMove
+        where restartMove = if moves /= [] then pvAIGameLoop (init moves) xo else pvAIGameLoop [] xo
 
-                       let moveQuality = case etherBoardError of Right b -> MT.GoodMove
-                                                                 Left err -> err
+pvPGameLoop moves = do let etherBoardORError = MT.makeMoves MT.emptyMetaBoard moves
+                       let board = case etherBoardORError of Right b -> b
+                                                             Left err -> MT.emptyMetaBoard
+
+                       let moveQuality = case etherBoardORError of Right b -> MT.GoodMove
+                                                                   Left err -> err
                        if moveQuality == MT.GoodMove 
                        then do if MT.toXO board == MT.Empty
                                then do putStrLn ((show board) ++ "\n\n" ++ "It's " ++ (show $ MT.turn board) ++ "'s move.")
-                                       nextMove <- getMove 
-                                       pvPGameLoop (moves ++ [nextMove])
+                                       maybeNexMove <- getMove 
+                                       if maybeNexMove /= Nothing 
+                                       then pvPGameLoop (moves ++ [fromJust maybeNexMove])
+                                       else do putStrLn "That input was invalid. All moves must be of the form:   Num Num   \nExample:1 2"
+                                               restartMove
                                else return ()
                        else do print moveQuality
-                               pvPGameLoop (init moves)
+                               restartMove
+        where restartMove = if moves /= [] then pvPGameLoop (init moves) else pvPGameLoop []
 
 getMove = do sMove <- getLine
-             let lMove = map read (words sMove) :: [Int] -- find a way to handle the error that can be trown
-             return (lMove !! 0, lMove !! 1)
+             return $ prossesMove sMove
+
+prossesMove :: String -> Maybe MT.Move
+prossesMove sMove = checkNums $ map (reads :: String -> [(Int,String)]) (words sMove)
+        where checkNums [] = Nothing
+              checkNums (_:[]) = Nothing
+              checkNums ([]:_:[]) = Nothing
+              checkNums (_:[]:[]) = Nothing
+              checkNums ([(mm, _)]:[(sm, _)]:[]) = Just (mm, sm) 

@@ -8,8 +8,7 @@ module MiniMax
 ,  move
 ) where
 
--- Represnets the leaf of the game tree. It holds the top move that spawned it and the utility of the final gamestate it represents.
-data Leaf m = Leaf {move :: m, utility :: Integer} deriving Show
+import MetaTicTacToeBot
 
 miniMax :: [m] -> Integer -> ([m] -> [m]) -> ([m] -> Integer) -> m
 miniMax startMoves maxDepth sucFunc utilityFunc = move (miniMaxLeaf startMoves maxDepth sucFunc utilityFunc)

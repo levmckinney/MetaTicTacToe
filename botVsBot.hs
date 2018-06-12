@@ -8,18 +8,17 @@ import RandomBot
 import AlphaBeta
 import System.Random
 import Data.Maybe
-
-type Bot = (StdGen -> [Move] -> Maybe Move)
+import MetaTicTacToeBot
 
 main = do gen <- getStdGen
-          playGame (0,0,0) 2
+          playGame (0,0,0) 100
 
 playGame :: (Integer, Integer, Integer) -> Integer -> IO ()
-playGame winloss rounds = do if rounds > 100
+playGame winloss rounds = do if rounds > 0
                              then do gen <- newStdGen
-                                     let resultString (b,r,d) = ("DeepAlpha has won: " ++ show b ++ " AlphaBeta has won:  " ++ show r ++ " Draws: " ++ show d ++ " gen was: " ++ show gen)
+                                     let resultString (b,r,d) = ("DeepAlpha has won: " ++ show b ++ " random bot has won:  " ++ show r ++ " Draws: " ++ show d ++ " gen was: " ++ show gen)
                                      putStrLn $ resultString winloss
-                                     playGame (playFullRound (alphBetaBotMove 1) (alphBetaBotMove 1) winloss gen) (rounds - 1)
+                                     playGame (playFullRound (alphBetaBotMove 3) (randomMove) winloss gen) (rounds - 1)
                              else return ()
 
 playFullRound :: Bot -> Bot -> (Integer, Integer, Integer) -> StdGen -> (Integer, Integer, Integer)

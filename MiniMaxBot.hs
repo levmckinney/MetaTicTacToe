@@ -12,6 +12,8 @@ import qualified MiniMax as MM
 import qualified AlphaBeta as AB
 import MetaTicTacToe
 import System.Random
+import MetaTicTacToeBot
+
 
 alphBetaBotMove :: Integer -> StdGen -> [Move] -> Maybe Move
 alphBetaBotMove depth gen moves = AB.move `fmap` alphBetaBotLeaf depth gen moves
@@ -19,8 +21,8 @@ alphBetaBotMove depth gen moves = AB.move `fmap` alphBetaBotLeaf depth gen moves
 alphBetaBotLeaf :: Integer -> StdGen -> [Move] -> Maybe (AB.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
 alphBetaBotLeaf depth gen moves
     | successor moves == [] = Nothing
-    | even(length moves)  = Just (AB.miniMaxLeaf moves depth successor (utility X gen))
-    | odd(length moves) = Just (AB.miniMaxLeaf moves depth successor (utility O gen))
+    | even(length moves)  = Just (AB.miniMaxLeaf moves depth successor (utilityFunc X gen))
+    | odd(length moves) = Just (AB.miniMaxLeaf moves depth successor (utilityFunc O gen))
 
 miniMaxBotMove :: Integer -> StdGen -> [Move] -> Maybe Move
 miniMaxBotMove depth gen moves = MM.move `fmap` miniMaxBotLeaf depth gen moves
@@ -28,18 +30,19 @@ miniMaxBotMove depth gen moves = MM.move `fmap` miniMaxBotLeaf depth gen moves
 miniMaxBotLeaf :: Integer -> StdGen -> [Move] -> Maybe (MM.Leaf Move) -- Returns Nothing if Game Alread won or noMore Valid Moves
 miniMaxBotLeaf depth gen moves
     | successor moves == [] = Nothing
-    | even(length moves)  = Just (MM.miniMaxLeaf moves depth successor (utility X gen))
-    | odd(length moves) = Just (MM.miniMaxLeaf moves depth successor (utility O gen))
+    | even(length moves)  = Just (MM.miniMaxLeaf moves depth successor (utilityFunc X gen))
+    | odd(length moves) = Just (MM.miniMaxLeaf moves depth successor (utilityFunc O gen))
     
 
 subBoardWinValue = 100
 midCellValue = 10
 maxMinNoise = 5
 
-utility :: XO -> StdGen -> [Move] -> Integer
-utility _ _ [] = 0
-utility xo gen moves = subBoardsU + gameWinU + randomOffset
-    where randomOffset = fst $ randomR (-maxMinNoise, maxMinNoise) gen
+utilityFunc :: XO -> StdGen -> [Move] -> Integer
+utilityFunc _ _ [] = 0
+utilityFunc xo gen moves = subBoardsU + gameWinU + randomOffset
+    where randomOffset = fst $ randomR (-maxMinNoise, maxMinNoise) (mkStdGen seed)
+            where seed = (fst $ random gen) + sum (map fst moves)
           mb = makeMoves' moves
           lsb i = look' mb i
           gsbU win

@@ -7,9 +7,7 @@ module AlphaBeta
 ,  Leaf(..)
 ) where
 
--- Leaf holds utility of the final gamestate to represent.
--- The move is first move in the branch that spawed it. 
-data Leaf m = Leaf {move :: m, utility :: Integer} deriving (Show, Eq)
+import MetaTicTacToeBot
 
 type NodeState = (Integer,Integer)
 
