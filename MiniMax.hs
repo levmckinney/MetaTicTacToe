@@ -4,8 +4,6 @@ module MiniMax
 ,  miniMaxLeaf
 ,  integerNegInfinity
 ,  integerInfinity
-,  Leaf
-,  move
 ) where
 
 import MetaTicTacToeBot

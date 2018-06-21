@@ -45,7 +45,7 @@ pvAIGameLoop moves xo = do let etherBoardORError = MT.makeMoves MT.emptyMetaBoar
                                                         checkDepth [(d,_)] = Just d
                                                         maybeDepth = checkDepth readDepth
                                                     if maybeDepth /= Nothing
-                                                    then do let maybeAiLeaf = miniMaxBotLeaf (fromJust maybeDepth) gen moves -- change bot here
+                                                    then do let maybeAiLeaf = alphaBetaBotLeaf (fromJust maybeDepth) gen moves -- change bot here
                                                             if maybeAiLeaf == Nothing
                                                             then print board  
                                                             else do let aiLeaf = case maybeAiLeaf of Just a -> a
