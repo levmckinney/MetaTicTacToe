@@ -34,7 +34,7 @@ pvAIGameLoop moves xo = do let etherBoardORError = MT.makeMoves MT.emptyMetaBoar
                                                         maybeNexMove <- getMove 
                                                         if maybeNexMove /= Nothing
                                                         then pvAIGameLoop (moves ++ [fromJust maybeNexMove]) xo
-                                                        else do putStrLn "That input was invalid. All moves but be of the form:   Num Num   \nExample:0 8"
+                                                        else do putStrLn  $ "That input was invalid. All moves must be of the form:   Num Num   \nExample:0 8\n" ++ show moves -- this is for testing proboply should remove at some point
                                                                 restartMove
                                                 else return ()
                                             else do putStrLn "How deep to search (2-3 is recomended):"
@@ -87,4 +87,4 @@ prossesMove sMove = checkNums $ map (reads :: String -> [(Int,String)]) (words s
               checkNums (_:[]) = Nothing
               checkNums ([]:_:[]) = Nothing
               checkNums (_:[]:[]) = Nothing
-              checkNums ([(mm, _)]:[(sm, _)]:[]) = Just (mm, sm) 
+              checkNums ([(mm, _)]:[(sm, _)]:[]) = Just (mm, sm)

@@ -22,6 +22,6 @@ miniMaxLeaf startMoves maxDepth sucFunc utilityFunc = findMiniMaxLeaf maxDepth T
                   orderUtility leaf1 gtlt leaf2 = if utility leaf1 `gtlt` utility leaf2 then leaf2 else leaf1
 
 integerInfinity :: Integer
-integerInfinity = 100000
+integerInfinity = 10000000
 integerNegInfinity :: Integer
 integerNegInfinity = -integerInfinity

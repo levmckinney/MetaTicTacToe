@@ -24,21 +24,21 @@ miniMaxLeaf startMoves maxDepth sucFunc utilityFunc = alphaBetaFindLeaf maxDepth
             where firstChildLeaf = childLeaf (possibleMoves !! 0) nodeState
                   possibleMoves = sucFunc moves
                   childLeaf move = alphaBetaFindLeaf (depth - 1) (not isMax) (moves ++ [move])
-                  searchStepAlpha alphaLeaf move
-                    | utility alphaLeaf < ib = if utility childAlphaLeaf > utility alphaLeaf
-                                               then childAlphaLeaf
-                                               else alphaLeaf
-                    |otherwise = alphaLeaf
-                    where childAlphaLeaf = childLeaf move (utility alphaLeaf, ib)
-                  searchStepBeta betaLeaf move
-                    | ia > utility betaLeaf = if utility childBetaLeaf < utility betaLeaf
-                                              then childBetaLeaf
-                                              else betaLeaf
-                    | otherwise = betaLeaf
-                    where childBetaLeaf = childLeaf move(ia, utility betaLeaf)
+                  searchStepAlpha valueLeaf move
+                    | ib > utility valueLeaf  = if utility childValueLeaf > utility valueLeaf
+                                                then childValueLeaf
+                                                else valueLeaf
+                    |otherwise = valueLeaf
+                      where childValueLeaf = childLeaf move (utility valueLeaf, ib)
+                  searchStepBeta valueLeaf move
+                    | ia < utility valueLeaf = if utility childValueLeaf < utility valueLeaf
+                                               then childValueLeaf
+                                               else valueLeaf
+                    | otherwise = valueLeaf
+                      where childValueLeaf = childLeaf move (ia, utility valueLeaf)
 
 integerInfinity :: Integer
-integerInfinity = 100000
+integerInfinity = 10000000
 integerNegInfinity :: Integer
 integerNegInfinity = -integerInfinity
                     

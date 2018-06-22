@@ -16,9 +16,9 @@ main = do gen <- getStdGen
 playGame :: (Integer, Integer, Integer) -> Integer -> IO ()
 playGame winloss rounds = do if rounds > 0
                              then do gen <- newStdGen
-                                     let resultString (b,r,d) = ("alphaBetaBotMove has won: " ++ show b ++ " alphaBetaNoRandomBotMove has won:  " ++ show r ++ " Draws: " ++ show d ++ " gen was: " ++ show gen)
+                                     let resultString (b,r,d) = ("alphaBetaBotMove has won: " ++ show b ++ " miniMaxBotMove has won:  " ++ show r ++ " Draws: " ++ show d ++ " gen was: " ++ show gen)
                                      putStrLn $ resultString winloss
-                                     playGame (playFullRound (alphaBetaBotMove 3) (alphaBetaNoRandomBotMove 3) winloss gen) (rounds - 1)
+                                     playGame (playFullRound (alphaBetaBotMove 4) (miniMaxBotMove 4) winloss gen) (rounds - 1)
                              else return ()
 
 playFullRound :: Bot -> Bot -> (Integer, Integer, Integer) -> StdGen -> (Integer, Integer, Integer)
