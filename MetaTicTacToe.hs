@@ -16,6 +16,15 @@ module MetaTicTacToe
 ,  makeMoves'
 ) where
 
+-- Refrence
+-- mb = MetaBoard
+-- sb = SubBoard
+-- sm = move on the sub board
+-- mm = move on the meta board
+-- xo, ox = somthing of type XO
+-- a = (Usualy) Somthing in the class Integral.
+-- b = (Usualy) Somthing in the class Board
+
 --this is a type ment to represent the 3x3 cells of a tictactoe board
 type Cells b = (b, b, b, b, b, b, b, b, b)
 

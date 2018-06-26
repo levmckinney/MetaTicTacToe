@@ -21,6 +21,7 @@ playGame winloss rounds = do if rounds > 0
                                      playGame (playFullRound (alphaBetaBotMove 4) (miniMaxBotMove 4) winloss gen) (rounds - 1)
                              else return ()
 
+-- has two bots play a round as X and a round as O and then returns a new updated tally of wins and losses
 playFullRound :: Bot -> Bot -> (Integer, Integer, Integer) -> StdGen -> (Integer, Integer, Integer)
 playFullRound bot1 bot2 (iBot1Wins, iBot2Wins, iDraws) gen = (iBot1Wins + bot1Wins, iBot2Wins + bot2Wins, iDraws + draws)
     where gens = split gen
@@ -31,7 +32,8 @@ playFullRound bot1 bot2 (iBot1Wins, iBot2Wins, iDraws) gen = (iBot1Wins + bot1Wi
           xBot2Result = playBotGame bot2 bot1 (snd gens)
 
 addMoves moves = fmap (\m -> moves ++ [m])
-    
+
+-- plays a single game between two bots giving them new Standard Genorators every turn.
 playBotGame :: Bot -> Bot -> StdGen -> XO
 playBotGame xBot oBot initGen = nextRound [] (fst initGens) (snd initGens)
     where initGens = split initGen
